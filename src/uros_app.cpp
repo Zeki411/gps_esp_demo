@@ -119,18 +119,16 @@ void uros_app_init()
         vTaskDelay(1000 / portTICK_PERIOD_MS);
     }
 
-
     // Init uROS
     set_microros_serial_transports(uROS_Serial);
 
     // ping the agent to test the connection
     ESP_LOGI(UROS_APP_LOG_TAG, "Checking micro-ROS agent...");
-    rmw_ret_t ping_result = rmw_uros_ping_agent(1000, 5);
-    if (RMW_RET_OK != ping_result)
+    while (RMW_RET_OK != rmw_uros_ping_agent(1000, 5))
     {
         ESP_LOGE(UROS_APP_LOG_TAG,\
-            "micro-ROS agent not found. Please check and do reset to try again.");
-        error_loop();
+            "micro-ROS agent not found. Retrying...");
+        vTaskDelay(1000 / portTICK_PERIOD_MS);
     }
     ESP_LOGI(UROS_APP_LOG_TAG, "micro-ROS agent found. Initializing...");
 
