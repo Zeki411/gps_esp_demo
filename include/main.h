@@ -4,12 +4,18 @@
 #include <freertos/FreeRTOS.h>
 #include <freertos/queue.h>
 
+// WiFi info
+#define WIFI_SSID "serene_2G"
+#define WIFI_PSK "10541054"
+
 // uROS defines
 #define UROS_APP_LOG_TAG "uros-app"
 #define UROS_APP_LOG_LEVEL ESP_LOG_INFO
-#define UROS_HW_UART_RX 16
-#define UROS_HW_UART_TX 17
-#define UROS_HW_UART_BAUDRATE 115200
+// #define UROS_HW_UART_RX 16
+// #define UROS_HW_UART_TX 17
+// #define UROS_HW_UART_BAUDRATE 115200
+#define UROS_WIFI_AGENT_IP {192,168,1,12}
+#define UROS_WIFI_AGENT_PORT 8888
 
 #define UROS_NODE_NAME "esp_gnss"
 #define UROS_NODE_NAMESPACE ""

@@ -17,8 +17,8 @@
 
 #include "main.h"
 
-
-HardwareSerial uROS_Serial(2);
+IPAddress uros_agent_ip(UROS_WIFI_AGENT_IP);
+uint16_t uros_agent_port = UROS_WIFI_AGENT_PORT;
 
 rcl_allocator_t uros_allocator;
 rclc_support_t uros_support;
@@ -110,17 +110,10 @@ static void uros_sub_callback(const void * msgin)
 void uros_app_init()
 {
     esp_log_level_set(UROS_APP_LOG_TAG, UROS_APP_LOG_LEVEL);
-    
-    // Init HW
-    uROS_Serial.begin(UROS_HW_UART_BAUDRATE, SERIAL_8N1, UROS_HW_UART_RX, UROS_HW_UART_TX);
-    while (!uROS_Serial)
-    {
-        ESP_LOGE(UROS_APP_LOG_TAG, "Serial port not available");
-        vTaskDelay(1000 / portTICK_PERIOD_MS);
-    }
 
     // Init uROS
-    set_microros_serial_transports(uROS_Serial);
+    set_microros_wifi_transports((char *)WIFI_SSID, (char *)WIFI_PSK, uros_agent_ip, uros_agent_port);
+    // vTaskDelay(2000 / portTICK_PERIOD_MS);
 
     // ping the agent to test the connection
     ESP_LOGI(UROS_APP_LOG_TAG, "Checking micro-ROS agent...");

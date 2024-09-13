@@ -29,8 +29,14 @@ void gnss_app_init()
         vTaskDelay(1000 / portTICK_PERIOD_MS);
     }
 
+    ESP_LOGI(GNSS_APP_LOG_TAG, "u-blox GNSS detected!");
+
     // Configure GNSS
     gnss_dev.setI2COutput(COM_TYPE_UBX); //Set the I2C port to output UBX only (turn off NMEA noise)
+    // gnss_dev.setNavigationRate(1);
+    // gnss_dev.setMeasurementRate(25);
+    gnss_dev.setNavigationFrequency(40);
+    gnss_dev.setHNRNavigationRate(40);
     // gnss_dev.setI2CInput(COM_TYPE_RTCM3);
 
     ESP_LOGI(GNSS_APP_LOG_TAG, "GNSS APP initialized");
@@ -39,6 +45,9 @@ void gnss_app_init()
 void gnss_app_main_task(void *arg)
 {
     ESP_LOGI(GNSS_APP_LOG_TAG, "GNSS APP task started");
+
+    int64_t last_time = esp_timer_get_time();
+    uint8_t rx_cnt = 0;
 
     while (1)
     {
@@ -59,6 +68,14 @@ void gnss_app_main_task(void *arg)
             xQueueOverwrite(uros_gnss_queue, &gnss_data);
 
             // ESP_LOGI(GNSS_APP_LOG_TAG, "Lat: %f, Long: %f, Alt: %f", gnss_data.latitude, gnss_data.longitude, gnss_data.altitude);
+            if(rx_cnt == 100) // Print every 100th message
+            {
+                ESP_LOGI(GNSS_APP_LOG_TAG, "Rx Rate: %f Hz", 100.0 / ((esp_timer_get_time() - last_time) / 1000000.0));
+                last_time = esp_timer_get_time();
+                rx_cnt = 0;
+            }
+            rx_cnt++;
+
         }
         vTaskDelay(10 / portTICK_PERIOD_MS);
     }
