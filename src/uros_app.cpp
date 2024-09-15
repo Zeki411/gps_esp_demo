@@ -193,7 +193,7 @@ void uros_app_init()
 void uros_app_main_task(void *arg)
 {
     ESP_LOGI(UROS_APP_LOG_TAG, "uROS APP task started");
-    vTaskDelay(2000 / portTICK_PERIOD_MS);
+    // vTaskDelay(2000 / portTICK_PERIOD_MS);
 
     // RCSOFTCHECK(rclc_executor_spin(&uros_executor));
 
@@ -212,7 +212,7 @@ void uros_app_main_task(void *arg)
             error_loop();
         }
         
-        vTaskDelay(10 / portTICK_PERIOD_MS);
+        // vTaskDelay(10 / portTICK_PERIOD_MS);
     }
 }
 
