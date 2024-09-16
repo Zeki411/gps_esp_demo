@@ -95,6 +95,8 @@ static void uros_pub_timer_callback(rcl_timer_t * timer, int64_t last_call_time)
     
     RCSOFTCHECK(rcl_publish(&uros_pub, &fix_msg, NULL));
 
+    // Free the strings
+    rosidl_runtime_c__String__fini(&fix_msg.header.frame_id);
 }
 
 static void uros_sub_callback(const void * msgin)

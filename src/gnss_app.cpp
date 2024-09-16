@@ -33,11 +33,11 @@ void gnss_app_init()
 
     // Configure GNSS
     gnss_dev.setI2COutput(COM_TYPE_UBX); //Set the I2C port to output UBX only (turn off NMEA noise)
+    gnss_dev.setUART1Output(0); //Turn off UART output
     // gnss_dev.setNavigationRate(1);
     // gnss_dev.setMeasurementRate(25);
-    gnss_dev.setNavigationFrequency(40);
-    gnss_dev.setHNRNavigationRate(40);
-    // gnss_dev.setI2CInput(COM_TYPE_RTCM3);
+    // gnss_dev.setNavigationFrequency(40);
+    // gnss_dev.setHNRNavigationRate(40);
 
     ESP_LOGI(GNSS_APP_LOG_TAG, "GNSS APP initialized");
 }
@@ -65,12 +65,14 @@ void gnss_app_main_task(void *arg)
             gnss_data.longitude = (double)gnss_dev.getLongitude() / 10000000.0;
             gnss_data.altitude = (double)gnss_dev.getAltitudeMSL() / 1000.0; // Altitude above Mean Sea Level
 
-            xQueueOverwrite(uros_gnss_queue, &gnss_data);
+            // xQueueOverwrite(uros_gnss_queue, &gnss_data);
+            xQueueSend(uros_gnss_queue, &gnss_data, 0);
 
             // ESP_LOGI(GNSS_APP_LOG_TAG, "Lat: %f, Long: %f, Alt: %f", gnss_data.latitude, gnss_data.longitude, gnss_data.altitude);
             if(rx_cnt == 100) // Print every 100th message
             {
                 ESP_LOGI(GNSS_APP_LOG_TAG, "Rx Rate: %f Hz", 100.0 / ((esp_timer_get_time() - last_time) / 1000000.0));
+                ESP_LOGI(GNSS_APP_LOG_TAG, "Heap Free: %d", xPortGetFreeHeapSize());
                 last_time = esp_timer_get_time();
                 rx_cnt = 0;
             }
