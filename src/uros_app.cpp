@@ -13,7 +13,7 @@
 
 #include <rosidl_runtime_c/string_functions.h>
 
-#include <HardwareSerial.h>
+// #include <HardwareSerial.h>
 
 #include "main.h"
 
@@ -92,8 +92,10 @@ static void uros_pub_timer_callback(rcl_timer_t * timer, int64_t last_call_time)
     fix_msg.position_covariance_type = 0;
     memset(&fix_msg.position_covariance, 0, sizeof(fix_msg.position_covariance));
 
-    
     RCSOFTCHECK(rcl_publish(&uros_pub, &fix_msg, NULL));
+
+    // Clean up the allocated string memory
+    rosidl_runtime_c__String__fini(&fix_msg.header.frame_id);
 
 }
 
@@ -136,14 +138,14 @@ void uros_app_init()
                                 UROS_NODE_NAMESPACE,\
                                 &uros_support));   
     // create publisher
-    RCCHECK(rclc_publisher_init_default(&uros_pub,\
-                                        &uros_node,\
-                                        ROSIDL_GET_MSG_TYPE_SUPPORT(sensor_msgs, msg, NavSatFix),\
-                                        UROS_PUB_TOPIC_NAME));
+    RCCHECK(rclc_publisher_init_best_effort(&uros_pub,\
+                                            &uros_node,\
+                                            ROSIDL_GET_MSG_TYPE_SUPPORT(sensor_msgs, msg, NavSatFix),\
+                                            UROS_PUB_TOPIC_NAME));
 
 
     // create subscriber
-    RCCHECK(rclc_subscription_init_default(&uros_sub,\
+    RCCHECK(rclc_subscription_init_best_effort(&uros_sub,\
                                             &uros_node,\
                                             ROSIDL_GET_MSG_TYPE_SUPPORT(rtcm_msgs, msg, Message),\
                                             UROS_SUB_TOPIC_NAME));
@@ -184,8 +186,19 @@ void uros_app_init()
     }
 
     // Create the queues
+    // ESP_LOGI("Memory", "Free heap before queue creation: %d", xPortGetFreeHeapSize());
     uros_gnss_queue = xQueueCreate(UROS_GNSS_QUEUE_SIZE, sizeof(gnss_data_t));
     uros_rtcm_queue = xQueueCreate(UROS_RTCM_QUEUE_SIZE, sizeof(rtcm_data_t));
+    // ESP_LOGI("Memory", "Free heap after queue creation: %d", xPortGetFreeHeapSize());
+
+    
+
+    if(uros_gnss_queue == NULL || uros_rtcm_queue == NULL)
+    {
+        ESP_LOGE(UROS_APP_LOG_TAG, "Failed to create the queues");
+        error_loop();
+    }
+
 
     ESP_LOGI(UROS_APP_LOG_TAG, "uROS APP initialized");
 }
@@ -212,16 +225,17 @@ void uros_app_main_task(void *arg)
             error_loop();
         }
         
-        // vTaskDelay(10 / portTICK_PERIOD_MS);
+        vTaskDelay(10 / portTICK_PERIOD_MS);
     }
 }
 
 void uros_app_start()
 {
-    xTaskCreate(uros_app_main_task,\
-                "uros_app_main_task",\
-                UROS_APP_TASK_STACK_SIZE*10,\
-                NULL,\
-                UROS_APP_TASK_PRIORITY,\
-                &uros_app_task_handle);
+    xTaskCreatePinnedToCore(uros_app_main_task,\
+                        "uros_app_main_task",\
+                        UROS_APP_TASK_STACK_SIZE*10,\
+                        NULL,\
+                        UROS_APP_TASK_PRIORITY,\
+                        &uros_app_task_handle,
+                        0);
 }

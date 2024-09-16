@@ -20,7 +20,7 @@
 #define UROS_SUB_TOPIC_NAME "/rtcm"
 #define UROS_PUB_TOPIC_NAME "/esp_gnss_demo/fix"
 #define UROS_PUB_TIMER_PERIOD_MS 20
-
+ 
 #define UROS_SUB_RTCM_MSG_DATA_SIZE 512
 
 #define UROS_GNSS_QUEUE_SIZE 1
@@ -30,9 +30,6 @@
 #define UROS_APP_TASK_STACK_SIZE 4096*2
 
 // GNSS defines
-// #define GNSS_HW_I2C_SDA 23
-// #define GNSS_HW_I2C_SCL 22
-// #define GNSS_HW_I2C_ADDRESS 0x42
 
 #define GNSS_HW_UART_RX 16
 #define GNSS_HW_UART_TX 17
