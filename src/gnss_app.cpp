@@ -32,12 +32,14 @@ void gnss_app_init()
     ESP_LOGI(GNSS_APP_LOG_TAG, "u-blox GNSS detected!");
 
     // Configure GNSS
-    gnss_dev.setI2COutput(COM_TYPE_UBX); //Set the I2C port to output UBX only (turn off NMEA noise)
-    gnss_dev.setUART1Output(0); //Turn off UART output
-    // gnss_dev.setNavigationRate(1);
-    // gnss_dev.setMeasurementRate(25);
+
+    gnss_dev.setNavigationRate(1);
+    gnss_dev.setMeasurementRate(100);
     // gnss_dev.setNavigationFrequency(40);
     // gnss_dev.setHNRNavigationRate(40);
+
+    gnss_dev.setI2COutput(COM_TYPE_UBX); //Set the I2C port to output UBX only (turn off NMEA noise)
+    gnss_dev.setUART1Output(0); //Turn off UART output
 
     ESP_LOGI(GNSS_APP_LOG_TAG, "GNSS APP initialized");
 }

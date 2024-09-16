@@ -138,14 +138,14 @@ void uros_app_init()
                                 UROS_NODE_NAMESPACE,\
                                 &uros_support));   
     // create publisher
-    RCCHECK(rclc_publisher_init_default(&uros_pub,\
+    RCCHECK(rclc_publisher_init_best_effort(&uros_pub,\
                                         &uros_node,\
                                         ROSIDL_GET_MSG_TYPE_SUPPORT(sensor_msgs, msg, NavSatFix),\
                                         UROS_PUB_TOPIC_NAME));
 
 
     // create subscriber
-    RCCHECK(rclc_subscription_init_default(&uros_sub,\
+    RCCHECK(rclc_subscription_init_best_effort(&uros_sub,\
                                             &uros_node,\
                                             ROSIDL_GET_MSG_TYPE_SUPPORT(rtcm_msgs, msg, Message),\
                                             UROS_SUB_TOPIC_NAME));
