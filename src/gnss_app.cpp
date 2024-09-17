@@ -8,18 +8,12 @@
 
 #include "main.h"
 
-#define GNSS_HW_WIRE Wire1
-
 TaskHandle_t gnss_app_task_handle;
 SFE_UBLOX_GNSS gnss_dev;
 gnss_data_t gnss_data;
 
 void gnss_app_init()
 {
-    // Init HW
-    GNSS_HW_WIRE.setPins(GNSS_HW_I2C_SDA, GNSS_HW_I2C_SCL);
-    GNSS_HW_WIRE.begin();
-
     esp_log_level_set(GNSS_APP_LOG_TAG, GNSS_APP_LOG_LEVEL);
 
     // Init GNSS

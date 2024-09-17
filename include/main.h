@@ -5,8 +5,16 @@
 #include <freertos/queue.h>
 
 // WiFi info
-#define WIFI_SSID "serene_2G"
-#define WIFI_PSK "10541054"
+#define WIFI_STA_SSID "serene_2G"
+#define WIFI_STA_PSK "10541054"
+
+#define WIFI_AP_SSID "esp32_gnss_uros"
+#define WIFI_AP_PSK "10541054"
+
+// Main app defines
+#define MAIN_APP_LOG_TAG "main-app"
+#define MAIN_APP_LOG_LEVEL ESP_LOG_INFO
+
 
 // uROS defines
 #define UROS_APP_LOG_TAG "uros-app"
@@ -32,6 +40,7 @@
 #define UROS_APP_TASK_STACK_SIZE 4096
 
 // GNSS defines
+#define GNSS_HW_WIRE Wire1
 #define GNSS_HW_I2C_SDA 23
 #define GNSS_HW_I2C_SCL 22
 #define GNSS_HW_I2C_ADDRESS 0x42

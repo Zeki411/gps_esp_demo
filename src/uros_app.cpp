@@ -114,7 +114,21 @@ void uros_app_init()
     esp_log_level_set(UROS_APP_LOG_TAG, UROS_APP_LOG_LEVEL);
 
     // Init uROS
-    set_microros_wifi_transports((char *)WIFI_SSID, (char *)WIFI_PSK, uros_agent_ip, uros_agent_port);
+    // set_microros_wifi_transports((char *)WIFI_SSID, (char *)WIFI_PSK, uros_agent_ip, uros_agent_port);
+
+    // sey wifi as transport
+    static struct micro_ros_agent_locator locator;
+    locator.address = uros_agent_ip;
+    locator.port = uros_agent_port;
+    rmw_uros_set_custom_transport(
+        false,
+        (void *) &locator,
+        platformio_transport_open,
+        platformio_transport_close,
+        platformio_transport_write,
+        platformio_transport_read
+    );
+
     // vTaskDelay(2000 / portTICK_PERIOD_MS);
 
     // ping the agent to test the connection
