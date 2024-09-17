@@ -31,7 +31,7 @@ rclc_executor_t uros_executor;
 QueueHandle_t uros_gnss_queue;
 QueueHandle_t uros_rtcm_queue;
 
-TaskHandle_t uros_app_task_handle;
+TaskHandle_t uros_task_handle;
 
 rtcm_msgs__msg__Message uros_sub_allocated_msg;
 
@@ -53,7 +53,7 @@ int64_t uros_get_epoch_millis()
     }
     else
     {
-        ESP_LOGE(UROS_APP_LOG_TAG,\
+        ESP_LOGE(UROS_LOG_TAG,\
             "Cannot get epoch millis. Time is not synchronized with the agent.");
         return -1; 
     }
@@ -63,7 +63,7 @@ static void uros_pub_timer_callback(rcl_timer_t * timer, int64_t last_call_time)
 {
     (void) last_call_time;
     if (timer == NULL) {
-        ESP_LOGE(UROS_APP_LOG_TAG, "Timer is NULL");
+        ESP_LOGE(UROS_LOG_TAG, "Timer is NULL");
         return;
     }
 
@@ -109,23 +109,34 @@ static void uros_sub_callback(const void * msgin)
     xQueueSend(uros_rtcm_queue, &rtcm_data, 0);
 }
 
-void uros_app_init()
+void uros_init()
 {
-    esp_log_level_set(UROS_APP_LOG_TAG, UROS_APP_LOG_LEVEL);
+    esp_log_level_set(UROS_LOG_TAG, UROS_LOG_LEVEL);
 
     // Init uROS
-    set_microros_wifi_transports((char *)WIFI_SSID, (char *)WIFI_PSK, uros_agent_ip, uros_agent_port);
-    // vTaskDelay(2000 / portTICK_PERIOD_MS);
+    // set_microros_wifi_transports((char *)WIFI_SSID, (char *)WIFI_PSK, uros_agent_ip, uros_agent_port);
+    static struct micro_ros_agent_locator locator;
+    locator.address = uros_agent_ip;
+    locator.port = uros_agent_port;
+
+    rmw_uros_set_custom_transport(
+        false,
+        (void *) &locator,
+        platformio_transport_open,
+        platformio_transport_close,
+        platformio_transport_write,
+        platformio_transport_read
+    );
 
     // ping the agent to test the connection
-    ESP_LOGI(UROS_APP_LOG_TAG, "Checking micro-ROS agent...");
+    ESP_LOGI(UROS_LOG_TAG, "Checking micro-ROS agent...");
     while (RMW_RET_OK != rmw_uros_ping_agent(1000, 5))
     {
-        ESP_LOGE(UROS_APP_LOG_TAG,\
+        ESP_LOGE(UROS_LOG_TAG,\
             "micro-ROS agent not found. Retrying...");
         vTaskDelay(1000 / portTICK_PERIOD_MS);
     }
-    ESP_LOGI(UROS_APP_LOG_TAG, "micro-ROS agent found. Initializing...");
+    ESP_LOGI(UROS_LOG_TAG, "micro-ROS agent found. Initializing...");
 
     // Initialize the micro-ROS
     // create allocator
@@ -180,7 +191,7 @@ void uros_app_init()
     // synchronize time with the agent
     if (RMW_RET_OK != rmw_uros_sync_session(1000))
     {
-        ESP_LOGE(UROS_APP_LOG_TAG,\
+        ESP_LOGE(UROS_LOG_TAG,\
             "Failed to synchronize time with the agent. Please check and do reset to try again.");
         error_loop();
     }
@@ -189,19 +200,19 @@ void uros_app_init()
     uros_gnss_queue = xQueueCreate(UROS_GNSS_QUEUE_SIZE, sizeof(gnss_data_t));
     uros_rtcm_queue = xQueueCreate(UROS_RTCM_QUEUE_SIZE, sizeof(rtcm_data_t));
 
-    ESP_LOGI(UROS_APP_LOG_TAG, "uROS APP initialized");
+    ESP_LOGI(UROS_LOG_TAG, "uROS APP initialized");
 }
 
-void uros_app_main_task(void *arg)
+void uros_task(void *arg)
 {
-    ESP_LOGI(UROS_APP_LOG_TAG, "uROS APP task started");
+    ESP_LOGI(UROS_LOG_TAG, "uROS APP task started");
     vTaskDelay(2000 / portTICK_PERIOD_MS);
 
     // RCSOFTCHECK(rclc_executor_spin(&uros_executor));
 
     if(rclc_executor_spin(&uros_executor) != RCL_RET_OK)
     {
-        ESP_LOGE(UROS_APP_LOG_TAG, "Failed to spin the executor");
+        ESP_LOGE(UROS_LOG_TAG, "Failed to spin the executor");
         error_loop();
     }
 
@@ -210,7 +221,7 @@ void uros_app_main_task(void *arg)
         // ESP_LOGI(UROS_APP_LOG_TAG, "uROS APP task running");
         if (rclc_executor_spin_some(&uros_executor, RCL_MS_TO_NS(100)) != RCL_RET_OK)
         {
-            ESP_LOGE(UROS_APP_LOG_TAG, "Failed to spin the executor");
+            ESP_LOGE(UROS_LOG_TAG, "Failed to spin the executor");
             error_loop();
         }
         
@@ -218,12 +229,12 @@ void uros_app_main_task(void *arg)
     }
 }
 
-void uros_app_start()
+void uros_task_init()
 {
-    xTaskCreate(uros_app_main_task,\
-                "uros_app_main_task",\
-                UROS_APP_TASK_STACK_SIZE*10,\
+    xTaskCreate(uros_task,\
+                "uros_task",\
+                UROS_TASK_STACK_SIZE*10,\
                 NULL,\
-                UROS_APP_TASK_PRIORITY,\
-                &uros_app_task_handle);
+                UROS_TASK_PRIORITY,\
+                &uros_task_handle);
 }

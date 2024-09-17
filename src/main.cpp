@@ -8,5 +8,5 @@ void setup()
 
 void loop()
 {
-    main_app();
+    system_launch();
 }
